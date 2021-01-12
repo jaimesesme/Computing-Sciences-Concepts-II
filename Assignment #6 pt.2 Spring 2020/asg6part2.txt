@@ -1,0 +1,632 @@
+Ruvi Jaimes
+COSC 2425
+Assignment #6 pt.2 
+
+
+%%%%%%%%%%%%%%% ReservationListImpl.java %%%%%%%%%%%%%%% 
+package reservationlist;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.GregorianCalendar;
+import java.util.Scanner;
+
+import reservation.Reservation;
+import reservation.ReservationUtilsImpl;
+import reservationlist.MyNode;
+
+public class ReservationListImpl implements ReservationList
+{
+	private MyNode <Reservation> first;
+	private int count;
+	
+	
+    public ReservationListImpl() 
+    {
+    	this.first = null;
+
+    	this.count = 0;
+    }
+
+    public ReservationListImpl(String fileName) 
+    {
+    	this.first = null;
+
+    	this.count = 0;
+    	
+    	Scanner inFile = null;
+    	
+    	try
+    	{
+
+    	    inFile = new Scanner (new  File(fileName) );
+
+    	}
+
+    	catch(FileNotFoundException e)
+
+    	{
+
+	    	System.out.println("Error opening file: " + fileName + " constructing empty list. ");
+	    	//return;
+
+    	}
+    	
+    	while(inFile.hasNext())
+    	{
+    		Reservation res = reservation.ReservationUtilsImpl.readFromScanner(inFile);
+    		if (res != null) 
+        	{
+        		this.add(res);
+        	}
+    	}
+    	
+    
+    }
+    
+    public String toString()
+    {
+    	String retVal = "";
+    	MyNode <Reservation> current = this.first;
+    	while(current != null)
+    	{
+    		retVal+= current.data+"\n";
+    		current = current.link;
+    	}
+    	return retVal;
+    }
+
+	//receives: nothing
+	// returns: the number reservations in the list
+	public int getSize()
+	{
+		return count;
+	}
+
+	// receives: nothing
+	// returns:  a String of all reservations that have either start or end date on received date
+	//      each reservation is separated by a newline character and specified by descriptor. 
+	//      Returns an empty string if no reservations occurred on received date.
+	public String getReservationListByDate(GregorianCalendar date)
+	{
+		String retVal = "";
+		MyNode <Reservation> current = this.first;
+		
+		
+		while (current != null)
+		{
+			if (current.data.getStartDate().equals(date)||current.data.getEndDate().equals(date))
+			{
+				retVal += current.data+"\n";
+			}
+			current = current.link;
+		}
+		return retVal;
+	}
+	
+	// receives: nothing
+	// returns: true if the list contains given reservation false if not in list.
+	// uses equals method and assumes it is overloaded for Reservation-derived instances
+	public boolean contains(Reservation reservation)
+	{
+		MyNode <Reservation> current = this.first;
+		
+		while (current != null)
+		{
+			if (current.data.equals(reservation))
+			{
+				return true;
+			}
+			current = current.link;
+		}
+		return false;
+	}
+
+	// receives: reservation to be added to this reservation list instance
+	// returns: true if received reservation is added to list if not in list already returns true if added, false if not
+	//       assumes equals is overloaded 
+	//      list remains sorted by start date at all times (from earliest date to latest date)
+	public boolean add(Reservation reservation)
+	{
+		if(contains(reservation))
+			return false;
+		else if(this.getSize()>= MAX_SIZE)
+			return false;
+		MyNode <Reservation> node = new MyNode<Reservation>();
+		node.data = reservation;
+		node.link = null;
+		MyNode <Reservation> previous = null;
+		MyNode <Reservation> current = this.first;
+		while(current!=null)
+		{
+			if(current.data.getStartDate().compareTo(reservation.getStartDate())>0)
+				break;
+			previous=current;
+			current=current.link;
+		}
+		if(previous==null)
+		{
+			node.link = this.first;
+			this.first=node;
+		}
+		else
+		{
+			node.link = previous.link;
+			previous.link = node;
+		}
+		this.count ++;
+		return true;
+	}
+
+	// receives: a position in this list to retrieve a reservation from
+	// returns: the reservation in the list at given position.
+	//       uses zero-based positions, so 0 is the position of the first reservation in the list
+	//       returns null if received position is out of range for this reservation list instance.
+	//  Example use:
+	//        ReservationList resList = new ReservationListImpl("reservations.txt");
+	//        Reservation t1 = resList.get(0);
+	//        assertTrue(t1!=null);
+	
+	
+	public Reservation get(int position)
+	{
+		if (position<0 || position >= this.getSize())
+			return null;
+		int loc = 0;
+		MyNode <Reservation> current = this.first;
+		while(loc<position)
+		{
+			loc++;
+			current = current.link;
+		}
+		return current.data;
+		
+	}
+
+	// receives: reservation to find in this list instance
+	// post: returns the position of received reservation in the list
+	//       (uses equals method which is overloaded when matching)
+	//       returns -1 if received reservation is not found in current list at any position
+	//  Example use:
+	//        ReservationList list = new ReservationListImpl("reservation.txt");
+	//        HotelReservation hotelRes = new HotelReservation("aabb","3/15/2018", "4/12/2018", "Mariott", 2);
+	//		  int position = list.find(hotelRes);
+	//	      assertTrue(position != -1);
+	public int find(Reservation reservation)
+	{
+		int retVal = 0; 
+		if (!(contains(reservation)))
+			return -1;
+		MyNode <Reservation> current = this.first;
+		while(current!=null)
+		{
+			
+			if (reservation.equals(current.data))
+				break;
+			retVal++;
+			current = current.link;
+			
+		}
+		return retVal;
+	
+	}
+
+	// receives: reservation to locate in this list
+	// returns:  reservation  in list that matches given reservation, removes it from list
+	//       list remains sorted by date after removal. (most recent to least recent)
+	//  	    if reservation in not in the list, returns null
+	public Reservation remove(Reservation reservation)
+	{
+		if (!(contains(reservation)))
+			return null;
+		MyNode <Reservation> current = this.first;
+		MyNode <Reservation> previous = null;
+		
+		while(current!=null)
+		{
+			if (current.data.equals(reservation))
+				break;
+			previous = current;
+			current = current.link;
+			
+		}
+		if (current == null)
+			return null;
+		if (previous ==null)
+			this.first = current.link;
+		else
+			previous.link = current.link;
+		this.count--;
+		return current.data;
+	}
+	// receives: nothing
+	// returns: nothing
+	//  removes all reservations from this list, so it's size becomes 0.
+	public void clear()
+	{
+		this.count = 0;
+		this.first = null;
+	}
+
+}
+
+%%%%%%%%%%%%%%% ReservationUtilsImpl.java %%%%%%%%%%%%%%% 
+package reservation;
+import reservation.RentalCar;
+import reservation.CarMake;
+import java.io.PrintWriter;
+import java.util.GregorianCalendar;
+import java.util.Scanner;
+import reservation.RentalCarUtilsImpl;
+import reservation.RentalCarUtilsImpl;
+
+public class ReservationUtilsImpl 
+{
+	
+	//receives: inFile, a Scanner instance already open and ready for reading 
+	//  tries to read one Reservation derived instance from file, 
+	//if successful, creates Reservation-derived instance, populates it, returns it, assumes data in order expected
+	//returns null if no data on inFile to read, returns populated Reservation-derived instance otherwise
+	public static Reservation readFromScanner(Scanner inFile)
+	{
+		String reservationType = "";
+		String confirmationId = "";
+		String startDate = "";
+		String endDate = "";
+		
+		String hotelName = "";
+		int numPersons = 0;
+		
+		String vin = "";
+		int year = 0;
+		String make = "";
+		
+		String departCode = "";
+		String arrivalCode = "";
+		
+		if(inFile.hasNext())
+			reservationType = inFile.next();
+		else
+			return null;
+		if (inFile.hasNext())
+			confirmationId = inFile.next();
+		else
+			return null;
+		if (inFile.hasNext())
+			startDate = inFile.next();
+		else
+			return null;
+		if (inFile.hasNext())
+			endDate = inFile.nextLine();
+		else
+			return null;
+		GregorianCalendar sDate = utils.MyUtils.stringToDate(startDate);
+		GregorianCalendar eDate = utils.MyUtils.stringToDate(endDate);
+		if (reservationType.toUpperCase().equals("HOTEL"))
+		{
+			if(inFile.hasNextInt())
+				numPersons = inFile.nextInt();
+			else
+				return null;
+			if (inFile.hasNext())
+				hotelName = inFile.nextLine();
+			else
+				return null;
+			HotelReservation hr = new HotelReservation(confirmationId);
+			hr.setNumPersons(numPersons);
+			hr.setHotelName(hotelName);
+			hr.setStartDate(startDate);
+			hr.setEndDate(endDate);
+
+			return hr;
+			
+	
+		}
+		
+		if (reservationType.toUpperCase().equals("CAR"))
+		{
+			
+			if (inFile.hasNext())
+			{
+				vin = inFile.next();
+			}
+			else
+			{
+				return null;
+			}
+			if(inFile.hasNextInt())
+			{
+				year = inFile.nextInt();
+			}
+			else
+			{
+				return null;
+			}
+			if(inFile.hasNext())
+			{
+				make = inFile.nextLine().trim().toUpperCase();
+			}
+			else
+			{
+				return null;
+			}
+			
+			CarMake aCarMake = CarMake.TOYOTA;
+			try
+			{
+				aCarMake = CarMake.valueOf(make);
+			}
+			catch (IllegalArgumentException e)
+			{
+				System.out.println("Error reading carmake");
+				return null;
+			}
+			
+			//CarMake aCarMake = CarMake.valueOf(make);
+			RentalCar car = new RentalCar(vin,year,aCarMake);
+			
+			
+			CarReservation cr = new CarReservation(confirmationId);
+			cr.setCar(car);
+			cr.setStartDate(startDate);
+			cr.setEndDate(endDate);
+			return cr;
+		} 
+		
+		if (reservationType.toUpperCase().equals("FLIGHT"))
+		{
+			if(inFile.hasNext())
+				departCode = inFile.next();
+			else
+				return null;
+			if (inFile.hasNext())
+				arrivalCode = inFile.nextLine();
+			else
+				return null;
+			
+			FlightReservation fr = new FlightReservation(confirmationId);
+			fr.setArrivalCode(arrivalCode);
+			fr.setDepartCode(departCode);
+			fr.setStartDate(startDate);
+			fr.setEndDate(endDate);
+			return fr;
+		} 
+		else
+			return null;
+			
+	}
+
+	//receives: reservation to write, outFile, already open and ready to be written to 
+	//writes received reservation instance to file in same format as read in with 
+	//including leading HOTEL or CAR or FLIGHT on first line of output
+	//returns: nothing
+	public static void writeToFile(PrintWriter outFile, Reservation reservation)
+	{
+		if (reservation instanceof CarReservation)
+		{
+			CarReservation cr = (CarReservation)reservation;
+			outFile.println("CAR " + cr.getConfirmationNumber() + " "+cr.getStartDateAsString()+" "+cr.getEndDateAsString());
+			outFile.println(cr.getCar().getVin()+" "+cr.getCar().getYear()+" "+cr.getCar().getMake());
+		}
+		
+		else if (reservation instanceof FlightReservation)
+		{
+			FlightReservation fr = (FlightReservation)reservation;
+			outFile.println("FLIGHT "+fr.getConfirmationNumber() + " "+fr.getStartDateAsString()+" "+fr.getEndDateAsString());
+			outFile.println(fr.getArrivalCode()+" "+fr.getDepartCode());
+		}
+		
+		else if (reservation instanceof HotelReservation)
+		{
+			HotelReservation hr = (HotelReservation)reservation;
+			outFile.println("HOTEL "+hr.getConfirmationNumber() + " "+hr.getStartDateAsString()+" "+hr.getEndDateAsString());
+			outFile.println(hr.getNumPersons()+" "+hr.getHotelName());
+		}
+	}
+	
+	
+	
+
+}
+
+%%%%%%%%%%%%%%% ReservationListUtilsImpl.java %%%%%%%%%%%%%%%
+
+package reservationlist;
+
+import java.io.PrintWriter;
+import java.util.Scanner;
+import reservation.Reservation;
+
+public class ReservationListUtilsImpl 
+{
+	
+	
+	// receives: inFile, a Scanner already open and ready to read from
+	// returns: a reservationList, a list of reservations read from Scanner, returns an empty list if no reservations found.
+	// reads from inFile as many reservations as it can, puts each one into reservationList 
+	// pre: inFile is open and ready to read from
+	// all reservations found on inFile are added to reservationList using add method in ReservationList interface
+	// returns: a ReservationList instance, populated with reservations read from received Scanner instance.
+	public static ReservationList readFromScanner(Scanner inFile)
+	{
+		ReservationList reserveList = new ReservationListImpl();
+		
+		while(inFile.hasNext())
+		{
+			Reservation reserve = reservation.ReservationUtilsImpl.readFromScanner(inFile);
+			if (reserve != null)
+				reserveList.add(reserve);
+		}
+			
+		
+		return reserveList;
+		
+	}
+
+
+	// receives: outFile, an open and ready to write to PrintWriter instance
+	//	           reservationList, a list to be written to outFile in data format (so it can be read back in later)
+	// writes received reservation list to received outFile in same format as read in with descriptor 
+	// on each line describing which type of reservation is on the line
+	// pre: outFile is open and ready to print to
+	// post: outFile contains entire contents of list written in same format
+	//	       as input format
+	public static void writeToFile(PrintWriter outFile, ReservationList reservationList)
+	{
+		for(int i = 0; i<reservationList.getSize();i++)
+		{
+			Reservation reserve = reservationList.get(i);
+			reservation.ReservationUtilsImpl.writeToFile(outFile, reserve);
+		}
+	}
+
+}
+
+%%%%%%%%%%%%% CONSOLE %%%%%%%%%%%
+Spring 2020 Assignment #6 Test
+Enter your name: RUVIJAIMES
+Execution Starting time:   at: 2020-04-27 14:06:00
+********BEGIN TESTING FOR Ruvijaimes ***********
+Execution Ruvijaimes -- BEGINS reservationTestHotel()  at: 2020-04-27 14:06:00
+Today is: 4/27/2020
+hotel1: HOTEL: confirmation #: 1111 starts: 5/15/2020 ends: 5/21/2020 numberOfPersons:1 hotelName: Hyatt Hill Country Resort
+hotel2: HOTEL: confirmation #: AAAA starts: 4/27/2020 ends: 4/27/2020 numberOfPersons:1 hotelName: $$$$
+Execution Ruvijaimes -- ENDS reservationTestHotel()  at: 2020-04-27 14:06:00
+Execution Ruvijaimes -- BEGINS reservationTestCar()  at: 2020-04-27 14:06:00
+Car Reservation: CAR: confirmation #: XXYY starts: 10/15/2020 ends: 10/15/2020 Car: Year: 2018 VIN: 8899 Make: NISSAN
+Execution Ruvijaimes -- ENDS reservationTestCar()  at: 2020-04-27 14:06:00
+Execution Ruvijaimes -- BEGINS reservationTestFlight()  at: 2020-04-27 14:06:00
+Flight reservation: FLIGHT: confirmation #: F222 starts: 8/1/2020 ends: 8/10/2020 AUSATL
+Execution Ruvijaimes -- ENDS reservationTestFlight()  at: 2020-04-27 14:06:00
+List of 0
+
+List of 1
+FLIGHT: confirmation #: F111 starts: 4/27/2020 ends: 5/24/2020 HOUAUS
+
+List of 6
+HOTEL: confirmation #: H111 starts: 4/27/2020 ends: 5/23/2020 numberOfPersons:2 hotelName: Hyatt Regency Austin
+CAR: confirmation #: C445 starts: 4/27/2020 ends: 9/22/2020 Car: Year: 2018 VIN: 2288 Make: TOYOTA
+FLIGHT: confirmation #: F111 starts: 4/27/2020 ends: 5/24/2020 HOUAUS
+HOTEL: confirmation #: H334 starts: 4/27/2020 ends: 9/12/2021 numberOfPersons:4 hotelName: Mariott Austin
+CAR: confirmation #: AAAA starts: 4/27/2020 ends: 6/12/2020 Car: Year: 2018 VIN: 2288 Make: TOYOTA
+FLIGHT: confirmation #: F888 starts: 4/27/2020 ends: 7/12/2021 DENAUS
+
+Execution Ruvijaimes BEGINS reservationListTestGetFind Test  at: 2020-04-27 14:06:00
+Should see 2 Reservations:
+FLIGHT: confirmation #: F111 starts: 7/6/2020 ends: 7/8/2020 SATDAL
+HOTEL: confirmation #: H111 starts: 7/12/2020 ends: 7/21/2020 numberOfPersons:2 hotelName: Hyatt Austin
+
+Should see 3 Reservations:
+FLIGHT: confirmation #: F111 starts: 7/6/2020 ends: 7/8/2020 SATDAL
+HOTEL: confirmation #: H111 starts: 7/12/2020 ends: 7/21/2020 numberOfPersons:2 hotelName: Hyatt Austin
+CAR: confirmation #: C111 starts: 8/28/2020 ends: 8/30/2020 Car: Year: 2018 VIN: 1211 Make: TOYOTA
+
+Execution Ruvijaimes END reservationListTestGetFind Test  at: 2020-04-27 14:06:00
+Execution Ruvijaimes BEGINS reservationListTestSizeContainsAdd Test  at: 2020-04-27 14:06:00
+Here is current list:
+HOTEL: confirmation #: H222 starts: 4/27/2020 ends: 5/13/2020 numberOfPersons:2 hotelName: Hyatt Dallas
+FLIGHT: confirmation #: F222 starts: 5/4/2020 ends: 5/9/2020 AUSDAL
+FLIGHT: confirmation #: F111 starts: 5/6/2020 ends: 5/8/2020 SATDAL
+CAR: confirmation #: C222 starts: 5/28/2020 ends: 5/30/2020 Car: Year: 2018 VIN: 1211 Make: TOYOTA
+
+Execution Ruvijaimes ENDS reservationListTestSizeContainsAdd Test  at: 2020-04-27 14:06:00
+Execution Ruvijaimes BEGINS Test reservationListFindByDate()  at: 2020-04-27 14:06:00
+
+Here is the list after adding 6 reservations 
+FLIGHT: confirmation #: F222 starts: 5/3/2020 ends: 5/7/2020 AUSDAL
+FLIGHT: confirmation #: F111 starts: 5/6/2020 ends: 5/8/2020 SATDAL
+HOTEL: confirmation #: H222 starts: 5/7/2020 ends: 5/12/2020 numberOfPersons:4 hotelName: Hyatt Dallas
+HOTEL: confirmation #: H111 starts: 5/8/2020 ends: 5/12/2020 numberOfPersons:2 hotelName: Hyatt Austin
+CAR: confirmation #: C222 starts: 5/27/2020 ends: 5/31/2020 Car: Year: 2017 VIN: 2222 Make: FORD
+CAR: confirmation #: C111 starts: 5/28/2020 ends: 5/30/2020 Car: Year: 2018 VIN: 1111 Make: TOYOTA
+
+num lines for date: 5/03/2020 = 1
+FLIGHT: confirmation #: F222 starts: 5/3/2020 ends: 5/7/2020 AUSDAL
+
+num lines for date: 5/12/2020 = 2
+HOTEL: confirmation #: H222 starts: 5/7/2020 ends: 5/12/2020 numberOfPersons:4 hotelName: Hyatt Dallas
+HOTEL: confirmation #: H111 starts: 5/8/2020 ends: 5/12/2020 numberOfPersons:2 hotelName: Hyatt Austin
+
+num lines for date: 5/06/2020 = 1
+FLIGHT: confirmation #: F111 starts: 5/6/2020 ends: 5/8/2020 SATDAL
+
+num lines for date: 5/30/2020 = 1
+num lines for date: 5/27/2020 = 1
+Execution Ruvijaimes ENDS Test reservationListFindByDate()  at: 2020-04-27 14:06:00
+Execution Ruvijaimes BEGINS Test reservationListFindByDate()  at: 2020-04-27 14:06:00
+Ruvijaimes Here is the list of 6 reservation(s)
+HOTEL: confirmation #: H222 starts: 4/27/2020 ends: 5/13/2020 numberOfPersons:2 hotelName: Hyatt Dallas
+HOTEL: confirmation #: H111 starts: 4/27/2020 ends: 5/12/2020 numberOfPersons:2 hotelName: Hyatt Austin
+FLIGHT: confirmation #: F222 starts: 5/6/2020 ends: 5/9/2020 AUSDAL
+FLIGHT: confirmation #: F111 starts: 5/6/2020 ends: 5/8/2020 SATDAL
+CAR: confirmation #: C222 starts: 5/28/2020 ends: 5/30/2020 Car: Year: 2018 VIN: 1211 Make: TOYOTA
+CAR: confirmation #: C111 starts: 5/28/2020 ends: 5/30/2020 Car: Year: 2018 VIN: 1211 Make: TOYOTA
+
+Ruvijaimes here is the UGLY toString() for GregorianCalendar date1: java.util.GregorianCalendar[time=?,areFieldsSet=false,areAllFieldsSet=false,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=?,YEAR=2020,MONTH=4,WEEK_OF_YEAR=?,WEEK_OF_MONTH=?,DAY_OF_MONTH=15,DAY_OF_YEAR=?,DAY_OF_WEEK=?,DAY_OF_WEEK_IN_MONTH=?,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=?,ZONE_OFFSET=?,DST_OFFSET=?]
+Execution Ruvijaimes ENDS Test reservationListTestSortRemoveClear  at: 2020-04-27 14:06:00
+Execution Ruvijaimes -- BEGINS reservationTestFileIO()  at: 2020-04-27 14:06:00
+********Now testing methods in ReservationUtilsImpl
+SUCCESS opened file: reservation6.txt for input
+Just read: HOTEL: confirmation #: H111 starts: 4/27/2020 ends: 5/23/2020 numberOfPersons:2 hotelName: Hyatt Regency Austin
+Just read: CAR: confirmation #: C445 starts: 4/27/2020 ends: 9/22/2020 Car: Year: 2018 VIN: 2288 Make: TOYOTA
+Just read: FLIGHT: confirmation #: F111 starts: 4/27/2020 ends: 5/24/2020 HOUAUS
+Just read: HOTEL: confirmation #: H334 starts: 4/27/2020 ends: 9/12/2021 numberOfPersons:4 hotelName: Mariott Austin
+Just read: CAR: confirmation #: AAAA starts: 4/27/2020 ends: 6/12/2020 Car: Year: 2018 VIN: 2288 Make: TOYOTA
+Just read: FLIGHT: confirmation #: F888 starts: 4/27/2020 ends: 7/12/2021 DENAUS
+SUCCESS read 6 reservations from reservation6.txt
+Ruvijaimes ********Now Testing writeToFile...
+SUCCESS opened file: reservation6.txt for input
+Just read: HOTEL: confirmation #: H111 starts: 4/27/2020 ends: 5/23/2020 numberOfPersons:2 hotelName: Hyatt Regency Austin
+Just read: CAR: confirmation #: C445 starts: 4/27/2020 ends: 9/22/2020 Car: Year: 2018 VIN: 2288 Make: TOYOTA
+Just read: FLIGHT: confirmation #: F111 starts: 4/27/2020 ends: 5/24/2020 HOUAUS
+Just read: HOTEL: confirmation #: H334 starts: 4/27/2020 ends: 9/12/2021 numberOfPersons:4 hotelName: Mariott Austin
+Just read: CAR: confirmation #: AAAA starts: 4/27/2020 ends: 6/12/2020 Car: Year: 2018 VIN: 2288 Make: TOYOTA
+Just read: FLIGHT: confirmation #: F888 starts: 4/27/2020 ends: 7/12/2021 DENAUS
+SUCCESS read 6 reservations from reservation6Out.txt
+SUCCESS opened file: reservation6Out.txt for input
+Just read: HOTEL: confirmation #: H111 starts: 4/27/2020 ends: 5/23/2020 numberOfPersons:2 hotelName: Hyatt Regency Austin
+Just read: CAR: confirmation #: C445 starts: 4/27/2020 ends: 9/22/2020 Car: Year: 2018 VIN: 2288 Make: TOYOTA
+Just read: FLIGHT: confirmation #: F111 starts: 4/27/2020 ends: 5/24/2020 AUSHOU
+Just read: HOTEL: confirmation #: H334 starts: 4/27/2020 ends: 9/12/2021 numberOfPersons:4 hotelName: Mariott Austin
+Just read: CAR: confirmation #: AAAA starts: 4/27/2020 ends: 6/12/2020 Car: Year: 2018 VIN: 2288 Make: TOYOTA
+Just read: FLIGHT: confirmation #: F888 starts: 4/27/2020 ends: 7/12/2021 AUSDEN
+SUCCESS read 6 reservations from reservation6Out.txt
+SUCCESS opened file: reservation1.txt for input
+Just read: FLIGHT: confirmation #: F111 starts: 4/27/2020 ends: 5/24/2020 HOUAUS
+SUCCESS read 1 reservations from reservation1Out.txt
+********Now testing methods in ReservationListUtilsImpl*******
+SUCCESS opened file: reservation6.txt for input
+After reading list from reservation6.txt
+HOTEL: confirmation #: H111 starts: 4/27/2020 ends: 5/23/2020 numberOfPersons:2 hotelName: Hyatt Regency Austin
+CAR: confirmation #: C445 starts: 4/27/2020 ends: 9/22/2020 Car: Year: 2018 VIN: 2288 Make: TOYOTA
+FLIGHT: confirmation #: F111 starts: 4/27/2020 ends: 5/24/2020 HOUAUS
+HOTEL: confirmation #: H334 starts: 4/27/2020 ends: 9/12/2021 numberOfPersons:4 hotelName: Mariott Austin
+CAR: confirmation #: AAAA starts: 4/27/2020 ends: 6/12/2020 Car: Year: 2018 VIN: 2288 Make: TOYOTA
+FLIGHT: confirmation #: F888 starts: 4/27/2020 ends: 7/12/2021 DENAUS
+
+Just wrote list to file: reservation6out.txt
+SUCCESS opened file: reservation6out.txt for input
+After reading list from reservation6out.txt
+HOTEL: confirmation #: H111 starts: 4/27/2020 ends: 5/23/2020 numberOfPersons:2 hotelName: Hyatt Regency Austin
+CAR: confirmation #: C445 starts: 4/27/2020 ends: 9/22/2020 Car: Year: 2018 VIN: 2288 Make: TOYOTA
+FLIGHT: confirmation #: F111 starts: 4/27/2020 ends: 5/24/2020 AUSHOU
+HOTEL: confirmation #: H334 starts: 4/27/2020 ends: 9/12/2021 numberOfPersons:4 hotelName: Mariott Austin
+CAR: confirmation #: AAAA starts: 4/27/2020 ends: 6/12/2020 Car: Year: 2018 VIN: 2288 Make: TOYOTA
+FLIGHT: confirmation #: F888 starts: 4/27/2020 ends: 7/12/2021 AUSDEN
+
+SUCCESS opened file: reservation1.txt for input
+After reading list from reservation1.txt
+FLIGHT: confirmation #: F111 starts: 4/27/2020 ends: 5/24/2020 HOUAUS
+
+Just wrote list to file: reservation1out.txt
+SUCCESS opened file: reservation1out.txt for input
+After reading list from reservation1out.txt
+FLIGHT: confirmation #: F111 starts: 4/27/2020 ends: 5/24/2020 AUSHOU
+
+SUCCESS opened file: reservationEmpty.txt for input
+After reading list from reservationEmpty.txt
+
+********COMPLETE testing methods in ReservationListUtilsImpl******
+Execution Ruvijaimes -- ENDS reservationTestFileIO()  at: 2020-04-27 14:06:00
+Execution Ending time:   at: 2020-04-27 14:06:00
+********END OF TESTING FOR Ruvijaimes ***********
