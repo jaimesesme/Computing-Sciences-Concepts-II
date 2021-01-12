@@ -1,0 +1,805 @@
+Ruvi Jaimes
+COCS 2425
+March 10th
+
+%%%%%%%%% HousePetListImpl.java %%%%%%%%%
+package housepetlist;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
+
+import housepet.GenderType;
+import housepet.HousePet;
+import housepet.HousePetUtilsImpl;
+import housepet.PetType;
+
+public class HousePetListImpl implements HousePetList
+{
+
+	private HousePet [] myPets;
+	private int numPets; 
+	
+	public HousePetListImpl()
+	{
+		this.myPets = new HousePet [MAX_SIZE];
+		this.numPets = 0;
+	}
+	
+	public HousePetListImpl(String fileName)
+	{
+		this.myPets = new HousePet [MAX_SIZE];
+		this.numPets = 0;
+		Scanner inFile = null;
+		try
+		{
+			inFile = new Scanner(new File(fileName));
+		}
+		catch(FileNotFoundException e)
+		{
+			System.out.println("Error finding file");
+		}
+
+		while(inFile.hasNext())
+		{
+			HousePet pet = HousePetUtilsImpl.readFromScanner(inFile);
+			if(pet!=null)
+			{
+				this.add(pet);
+			}
+		}
+		inFile.close();
+		
+		// create a scanner with given file name 
+		// scanner inFile = null;
+		// try
+		// {
+		//   inFile = new Scanner(new File(filename));
+		// catch (FileNotFoundException e)
+		// { SOP: can't find file.
+		// return;}
+		// while (inFile.hasNext())
+		// {  HousePet pet = HousePetUtilsImpl.readFromScanner(inFile);
+		//    if(pet!=null)
+		//    { this.add(pet);}
+		// }
+		// inFile.close();
+		
+		
+	}
+	
+	public String toString()
+	{
+		String retVal ="";
+		for (int index= 0; index<numPets; index++)
+		{
+			retVal+=myPets[index]+"\n";
+		}
+		return retVal;
+	}
+	
+	// receives: nothing
+	// returns: number of HousePets currently in the list
+	// Example use
+	// HousePetList list = new HousePetListImpl();  // create empty list of HousePet instances
+	// assertTrue(list.getSize() == 0);   // size should be 0
+	// boolean result = list.add(new HousePet("Tweety Bird", 2012, GenderType.MALE, PetType.BIRD));
+    // assertTrue(list.getSize() == 1a);
+	public int getSize()
+	{
+		return numPets;
+	}
+	
+	// receives: a HousePet instance that is NOT null
+	// returns:  true if received housepet matches any housepet in this list,
+    //          assumes equals is overloaded in HousePet class
+	//          returns false if received housepet is not currently in this list
+	public boolean contains(HousePet housepet)
+	{
+		boolean retVal = false;
+		for (int index= 0; index<numPets; index++)
+		{
+			if (housepet.equals(myPets[index]))
+			{
+				retVal= true;
+				break;
+			}
+		}
+		return retVal;
+	}
+	
+	
+	// receives: a HousePet instance that is NOT null
+	// task:   housepet is added to this list if not already contained in this list
+	//         (house pets must be unique so no two matching pets should be in the list)
+	// returns:true if housepet was added, false if no room in the list or duplicate
+	//         housepet is found in the list
+	//         a housepet is a duplicate if it is equal to any other housepet instance
+    // precondition: HousePet overrrides equals methed
+	// Example use:
+	//        HousePetList list = new HousePetListImpl();
+	//        boolean result = list.add(new HousePet("Sporty Sport", 2014, GenderType.MALE, PetType.GERBIL));
+	//        assertTrue(result == true);
+	public boolean add(HousePet housepet)
+	{
+		boolean retVal = false;
+		if (numPets<15 && !(contains(housepet)))
+		{
+			myPets[numPets] = housepet;
+			numPets = numPets +1;
+			retVal = true;
+		}
+		return retVal;
+	}
+	
+	// receives: a positon (int) in this house pet list
+	// returns: the housepet in the list at given position.
+	//       uses zero-based positions, so 0 is the position of the first house pet in the list
+	//       returns null if received position is out of range (0 to less than size of list.)
+	//  Example use:
+	//        HousePetList list = new HousePetListImpl();
+	//        HousePet pet2 = new HousePet("SillyCat", 2010, GenderType.FEMALE, PetType.CAT));
+	//        boolean result = list.add(pet2);
+	// 		  HousePet pet1 = list.get(0);
+	//        assertTrue(pet1.equals(pet2));
+	public HousePet get(int position)
+	{
+		if (position>= 0 && position <=15)
+		{
+			return myPets[position];
+		}
+		else
+			return null;
+	}
+	
+	// receives: a HousePet instance (not null)
+	// returns:  the position of received housepet in the list (0 based positioning)
+	//       (uses overloaded equals when matching)
+	//       returns -1 if received housepet is not found in current list at any position
+	//        HousePetList list = new HousePetListImpl();
+	//        HousePet pet2 = new HousePet("Biggy Big", 2010, GenderType.MALE, PetType.POTBELLY_PIG));
+	//        boolean result = list.add(pet2);
+	//		  int position = list2.find(pet2);
+	//	      assertTrue(position == 0);
+	public int find(HousePet housepet)
+	{
+		int retVal = 0; 
+		if (contains(housepet))
+		{
+			for (int index= 0; index< numPets; index++)
+			{
+				if (myPets[index].equals(housepet))
+				{
+					retVal = index;
+				}
+			}
+		}
+		else
+			retVal = -1;
+		return retVal;
+	}
+	
+	// receives: a PetType value
+	// returns: a String containing a list (1 house pet per line) of house pets
+	//        that have the received PetType value.
+	//        returns an EMPTY String if NO house pets have the received PetType value
+	// Example use:
+	//	      HousePetList list = new HousePetListImpl();
+	//        HousePet pet2 = new HousePet("Paul the Parrot", 2004, GenderType.MALE, PetType.BIRD);
+	//        boolean result = list.add(pet2);
+	//        assertTrue(result == true);
+	// 		  String list1 = list.getHousePetsMatchingPetType(PetType.DOG);
+	//        assertTrue(list1.equals(""));
+    //        list1 = list.getHousePetsMatchingPetType(PetType.BIRD);
+    //        assertEquals(1, utils.MyUtils.countNewLines(list1));
+	public String getHousePetsMatchingPetType(PetType matchingType)
+	{
+		String retVal = "";
+		for (int index= 0; index< numPets; index++)
+		{
+			if (myPets[index].getPetType().equals(matchingType))
+			{
+				retVal+= myPets[index] +"\n";
+			}
+		}
+		return retVal;
+	}
+	
+	
+	// receives: a GenderType value
+	// returns: a String containing a list (1 house pet per line) of house pets
+	//       that are of the received account type.
+	//    Example use:
+	//        HousePetList list = new HousePetListImpl();
+	//        HousePetList list = new HousePetListImpl();
+	//        HousePet pet2 = new HousePet("Paul the Parrot", 2004, GenderType.MALE, PetType.BIRD);
+	//        boolean result = list.add(pet2);
+	//        assertTrue(result == true);
+	// 		String list1 = list.getHousePetsMatchingGender(GenderType.UNKNOWN);
+	//        assertTrue(list1.equals(""));
+    //        list1 = list.getHousePetsMatchingGender(GenderType.MALE);
+    //        assertEquals(1, utils.MyUtils.numberLines(list1));
+	public String getHousePetsMatchingGender(GenderType aGender)
+	{
+		String retVal = "";
+		for (int index= 0; index< numPets; index++)
+		{
+			if (myPets[index].getGenderType().equals(aGender))
+			{
+				retVal+= myPets[index] +"\n";
+			}
+		}
+		return retVal;
+	}
+	
+
+	
+	
+	// receives: a last name (String)
+	// returns: a String containing a list (1 house pet per line) of house pets
+	//      with name matching  received (case in-sensitive) String
+	//      if no matches exist, returns empty string
+        //  Example use:
+	//	HousePetList list = new HousePetListImpl();
+	//        HousePet pet2 = new HousePet("Paul the Parrot", 2004, GenderType.MALE, PetType.BIRD);
+	//        boolean result = list.add(pet2);
+	//        assertTrue(result == true);
+	// 		String list1 = list.getHousePetsMatchingName("PAUL the PARROT");
+        //        assertEquals(1, utils.MyUtils.numberLines(list1));
+	public String getHousePetsMatchingName(String aName)
+	{
+		aName = utils.MyUtils.properFormat(aName);
+		String retVal = "";
+		for (int index= 0; index< numPets; index++)
+		{
+			if (myPets[index].getPetName().equals(aName))
+			{
+				retVal+= myPets[index] +"\n";
+			}
+		}
+		return retVal;
+	}
+	
+
+	
+	// receives: nothing
+	// returns: nothing
+    // task: this HousePetList is sorted by pet name from lowest alphabetically to highest
+	// Example use (give 2 more):
+	//	    HousePetList list = new HousePetListImpl();
+	//      HousePet pet1 = new HousePet("Paul the Parrot", 2004, GenderType.MALE, PetType.BIRD);
+    //      boolean result = list.add(pet1);
+	//      assertTrue(result == true);
+    //      HousePet pet2 = new HousePet("Crazy cat",2012, GenderType.FEMALE, PetType.CAT);
+    //      HousePet pet3 = new HousePet("prince", 2018, GenderType.MALE, PetType.DOG);
+	//      boolean result = list.add(pet2);
+	//      assertTrue(result == true);
+	// 	    list.sortByName();
+	//      System.out.println("here is the sorted list:\n" + list);  // should be in appropriate order smallest name  to largest
+	// should output:
+    //      Crazy Cat 7 years FEMALE CAT
+    //      Paul The Parrot 15 years MALE BIRD
+    //      Prince 1 years MALE DOG
+    public void sortByName()
+    {
+    	String alphabet = "abcdefghijklmnopqrstuvwxyz";
+    	
+    	for (int index=0; index<numPets; index++)
+    	{
+    		int k = index;
+    		while (k>0)
+    		{
+    			if (myPets[k].getPetName().toLowerCase().compareTo(myPets[k-1].getPetName().toLowerCase())<0)
+        		{
+        			HousePet temp =  myPets[k];
+        			
+        			myPets[k]= myPets[k-1];
+        			myPets[k-1] = temp;
+        			k--;
+        		}
+    			else
+    			{
+    				k=0;
+    			}
+    		}
+    	}
+    }
+	
+	
+	
+  	// receives: nothing
+	// returns: nothing
+    // task:   this HousePetList is sorted by age of pet, from HIGHEST to LOWEST
+	// Example use (give 2 more):
+	//	    HousePetList list = new HousePetListImpl();
+	//      HousePet pet1 = new HousePet("Paul the Parrot", 2004, GenderType.MALE, PetType.BIRD);
+    //      boolean result = list.add(pet1);
+	//      assertTrue(result == true);
+    //      HousePet pet2 = new HousePet("Crazy cat",2012, GenderType.FEMALE, PetType.CAT);
+    //      HousePet pet3 = new HousePet("prince", 2018, GenderType.MALE, PetType.DOG);
+	//      boolean result = list.add(pet2);
+	//      assertTrue(result == true);
+	// 	    list.sortByName();
+	//      System.out.println("here is the sorted list:\n" + list);  // should be in appropriate order smallest name  to largest
+	// should output:
+    //         Prince 1 years MALE DOG
+    //         Crazy Cat 7 years FEMALE CAT
+    //         Paul The Parrot 15 years MALE BIRD
+    public void sortByAge()
+    {
+    	for (int index = 0; index<numPets; index++)
+		{
+  
+    		int k = index;
+    		while (k>0)
+    		{
+    			if (myPets[k].getYearBorn()<myPets[k-1].getYearBorn())
+        		{
+        			HousePet temp =  myPets[k];
+        			
+        			myPets[k]= myPets[k-1];
+        			myPets[k-1] = temp;
+        			k--;
+        		}
+    			else
+    			{
+    				k=0;
+    			}
+    		}
+    		
+		}
+    	
+    }
+    
+	// receives: a HousePet instance, not null
+  	// returns:   a HousePet instance  in this list that is found that MATCHES the
+	//       received housepet (assume equals is overloaded for HousePet)
+	//       the HousePet instance in the list that matched received housepet is removed
+	//       from this list AND RETURNED.
+	//       If no HousePet instance is found that matches received housepet
+	//       then null is RETURNED
+    // Example use:
+    //      HousePetList list = new HousePetListImpl();
+    //      HousePet pet2 = new HousePet("Paul the Parrot", 2004, GenderType..MALE, PetType.BIRD);
+
+    //      HousePet pet3 = new HousePet("Silly Bird", 2017, GenderType.FEMALE, PetType.BIRD);
+	//      boolean result = list.add(pet3);
+	//      assertTrue(result == true);
+    //      boolean result = list.add(pet2);
+    //      assertTrue(result == true);
+    //      assertTrue(list.getSize() ==2);
+    //      HousePet remPet = list.remove(pet2);
+    //      assertTrue(remPet.equals(pet2));
+    //      assertTrue(list.getSize() == 1);
+    // Example use #2:
+    //      remPet = list.remove(pet2)
+    //      assertEquals(null, remPet);
+    public HousePet remove(HousePet housepet)
+    {
+    	if (contains(housepet)) 
+    	{
+    		int index = find(housepet);
+    		HousePet retVal =  myPets[index];
+    		myPets[index]= myPets[numPets-1];
+    		numPets=numPets-1;
+    		return retVal;
+    	}
+    	else
+    		return null;
+    }
+    
+    
+    // receives: nothing
+    // returns: nothing
+    // task:  this HousePetList instance is made to be empty
+    //        clear out all house pets from this instance
+    public void clear()
+    {
+    	int number = numPets;
+    	for (int index= 0; index<number; index++)
+		{
+    		remove(myPets[index]);
+		}
+    }
+	
+	
+}
+
+%%%%%%%%% HousePetListUtilsImpl.java %%%%%%%%% 
+
+package housepetlist;
+import java.io.PrintWriter;
+import java.util.Scanner;
+
+import housepet.HousePet;
+import housepet.HousePetUtilsImpl;
+
+
+public class HousePetListUtilsImpl 
+{
+	// receives: inFile, a Scanner instance that is open and ready to read data from
+    // returns:  a HousePetList instance that is populated with house pets from received Scanner
+    //
+    // task:  constructs a HousePetList instance and populates it with any house pets found on scanner (adds tolist as it reads accounts)
+	//   invalid data on scanner stops reading
+	//   stops reading when end of input or when aList reaches MAX_SIZE
+	//   or when attempting to read an account and bad data is found
+	// Example use: Scanner infile = new Scanner(new File("test.txt"));
+	//              HousePetList myList = HousePetListUtilsImpl.readFromScanner(infile);
+	//              HousePetList anotherList = HousePetListUtilsImpl.readFromScanner(scanner);
+	public static HousePetList readFromScanner(Scanner scanner)
+	{
+		HousePetList petList = new HousePetListImpl();
+		while (scanner.hasNext())
+		{
+			HousePet pet = HousePetUtilsImpl.readFromScanner(scanner);
+			if(pet != null)
+			{
+				petList.add(pet);
+			}	
+		}
+		return petList;
+	}
+	
+	//receives: out, a PrintWriter that is open and ready to write to,
+	//         petList, a HousePetList instance to write out to the given PrintWriter
+	//returns: nothing
+	// task:  prints to the received print writer, out,  contains current contents of petList in program readable format
+	public static void writeToFile(PrintWriter out, HousePetList aList)
+	{
+		for (int index =0; index < aList.getSize() ; index++)
+		{
+			HousePetUtilsImpl.writeToFile(out, aList.get(index));
+		}
+		
+	}
+}
+
+%%%%%%%%% CONSOLE %%%%%%%%% 
+
+Enter your name: Ruvi
+Begin Asg5 Testing for : Ruvi
+Execution BEGINS  at: 2020-03-09 21:19:17
+
+*********************Now testing getters for HousePets
+Pet 1: Pet Name: A$$$$a Age: 0 Gender: UNKNOWN Pet Type: UNKNOWN
+Pet 2: Pet Name: A$$$$a Age: 0 Gender: UNKNOWN Pet Type: UNKNOWN
+Pet 3: Pet Name: Shirley Ann Marie Age: 9 Gender: FEMALE Pet Type: CAT
+Pet 4: Pet Name: A$$$$a Age: 0 Gender: MALE Pet Type: BIRD
+
+*********Now testing constructors for HousePet instances
+
+*********************Now testing modifiers for HousePets
+
+*********************Now testing setter/getter for petName
+Now testing setter/getter for yearBorn
+
+********* Now testing toString() on all 4 pets, each output line should be 
+*********   neat and easy to read with proper spacing.
+Pet 1: Pet Name: Queen Anne Margaret Age: 12 Gender: UNKNOWN Pet Type: UNKNOWN
+Pet 2: Pet Name: A$$$$a Age: 0 Gender: UNKNOWN Pet Type: UNKNOWN
+Pet 3: Pet Name: Shirley Ann Marie Age: 9 Gender: FEMALE Pet Type: CAT
+Pet 4: Pet Name: King George Age: 0 Gender: MALE Pet Type: BIRD
+********Now testing set/get for gender 
+Pet 1: Pet Name: Queen Anne Margaret Age: 12 Gender: UNKNOWN Pet Type: UNKNOWN
+Pet 2: Pet Name: A$$$$a Age: 0 Gender: UNKNOWN Pet Type: UNKNOWN
+Pet 3: Pet Name: Shirley Ann Marie Age: 9 Gender: FEMALE Pet Type: CAT
+Pet 4: Pet Name: King George Age: 0 Gender: MALE Pet Type: BIRD
+********Now testing set/get for pet type 
+Pet 1: Pet Name: Queen Anne Margaret Age: 12 Gender: MALE Pet Type: UNKNOWN
+Pet 2: Pet Name: A$$$$a Age: 0 Gender: FEMALE Pet Type: UNKNOWN
+Pet 3: Pet Name: Shirley Ann Marie Age: 9 Gender: FEMALE Pet Type: CAT
+Pet 4: Pet Name: King George Age: 0 Gender: MALE Pet Type: BIRD
+********* Now testing toString() on all 4 pets, each output line should be 
+*********   neat and easy to read with proper spacing.
+Pet 1: Pet Name: Queen Anne Margaret Age: 12 Gender: MALE Pet Type: DOG
+Pet 2: Pet Name: A$$$$a Age: 0 Gender: FEMALE Pet Type: GERBIL
+Pet 3: Pet Name: Shirley Ann Marie Age: 9 Gender: FEMALE Pet Type: CAT
+Pet 4: Pet Name: King George Age: 0 Gender: MALE Pet Type: BIRD
+********Now testing that toString() produces no new line chars in returned String for HousePet
+
+-----------------------
+Testing equals() and hashCode() methods  *********
+
+-----------------------
+Testing read and write methods for HousePet *********
+SUCCESS opened file: housepet8.txt for input
+Just read: Pet Name: Zoey The Cat Princess Age: 10 Gender: FEMALE Pet Type: CAT
+Just read: Pet Name: Rugby Toughy Age: 8 Gender: MALE Pet Type: DOG
+Just read: Pet Name: Sweety Tweety Age: 18 Gender: MALE Pet Type: BIRD
+Just read: Pet Name: Skippy Doo Age: 4 Gender: UNKNOWN Pet Type: GERBIL
+Just read: Pet Name: Zippity Doo Age: 4 Gender: UNKNOWN Pet Type: GERBIL
+Just read: Pet Name: Fred Flintstone Age: 7 Gender: MALE Pet Type: POTBELLY_PIG
+Just read: Pet Name: Gambling George Age: 2 Gender: MALE Pet Type: BIRD
+Just read: Pet Name: Fred Flintstone Age: 1 Gender: MALE Pet Type: LIZARD
+********Now Testing writeToFile...
+SUCCESS opened file: housepetEmpty.txt for input
+SUCCESS opened file: housepetError.txt for input
+Error reading carmake
+SUCCESS opened file: housepet1.txt for input
+Just read: Pet Name: Fred Flintstone Age: 5 Gender: MALE Pet Type: POTBELLY_PIG
+Now writing 4 pets: 
+Pet Name: Fred Flintstone Age: 5 Gender: MALE Pet Type: POTBELLY_PIG
+Pet Name: A$$$$a Age: 0 Gender: UNKNOWN Pet Type: UNKNOWN
+Pet Name: Shirley Ann Marie Age: 9 Gender: FEMALE Pet Type: CAT
+Pet Name: A$$$$a Age: 0 Gender: MALE Pet Type: BIRD
+SUCCESS opened file: housepetFourWrite.txt for input
+Just read: Pet Name: Fred Flintstone Age: 5 Gender: MALE Pet Type: POTBELLY_PIG
+Just read: Pet Name: A$$$$a Age: 0 Gender: UNKNOWN Pet Type: UNKNOWN
+Just read: Pet Name: Shirley Ann Marie Age: 9 Gender: FEMALE Pet Type: CAT
+Just read: Pet Name: A$$$$a Age: 0 Gender: MALE Pet Type: BIRD
+SUCCESS opened file: housepetFourWrite.txt for input
+Just read: Pet Name: Fred Flintstone Age: 5 Gender: MALE Pet Type: POTBELLY_PIG
+Just read: Pet Name: A$$$$a Age: 0 Gender: UNKNOWN Pet Type: UNKNOWN
+Just read: Pet Name: Shirley Ann Marie Age: 9 Gender: FEMALE Pet Type: CAT
+Just read: Pet Name: A$$$$a Age: 0 Gender: MALE Pet Type: BIRD
+
+***** testing constructors and toString() *****
+**** Testing getSize() **** 
+****Testing toString()****
+Here is list1:  should be empty
+
+Here is list2:  should have 1 pet 
+Pet Name: Fred Flintstone Age: 5 Gender: MALE Pet Type: POTBELLY_PIG
+
+Here is list3:  should have 8 pets 
+Pet Name: Zoey The Cat Princess Age: 10 Gender: FEMALE Pet Type: CAT
+Pet Name: Rugby Toughy Age: 8 Gender: MALE Pet Type: DOG
+Pet Name: Sweety Tweety Age: 18 Gender: MALE Pet Type: BIRD
+Pet Name: Skippy Doo Age: 4 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Zippity Doo Age: 4 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Fred Flintstone Age: 7 Gender: MALE Pet Type: POTBELLY_PIG
+Pet Name: Gambling George Age: 2 Gender: MALE Pet Type: BIRD
+Pet Name: Fred Flintstone Age: 1 Gender: MALE Pet Type: LIZARD
+
+Here is list4:  should have 15 (MAX_SIZE) petss 
+Pet Name: Miss Wonderful Age: 7 Gender: FEMALE Pet Type: POTBELLY_PIG
+Pet Name: Kevin David Age: 2 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Mr. Ziggs Age: 0 Gender: MALE Pet Type: DOG
+Pet Name: Ms. Betty Rugger Age: 9 Gender: FEMALE Pet Type: BIRD
+Pet Name: Zane King Of Majesty Age: 6 Gender: MALE Pet Type: GERBIL
+Pet Name: Sport Age: 20 Gender: FEMALE Pet Type: DOG
+Pet Name: Canyon Grey Age: 11 Gender: MALE Pet Type: LIZARD
+Pet Name: King Of Queens Age: 6 Gender: MALE Pet Type: CAT
+Pet Name: Queen Of Kings Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Flapper Lee Age: 17 Gender: MALE Pet Type: DOG
+Pet Name: Tinker Belle Age: 4 Gender: FEMALE Pet Type: CAT
+Pet Name: Rosco Age: 0 Gender: MALE Pet Type: BIRD
+Pet Name: Cooper Gambit Age: 10 Gender: MALE Pet Type: LIZARD
+Pet Name: Shirley Ann Marie Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Rosco Age: 6 Gender: MALE Pet Type: POTBELLY_PIG
+
+**** End of testConstructorsAndtoString()****
+
+***** testing HousePetList getters() *****
+list1: 
+
+list2: 
+Pet Name: Fred Flintstone Age: 5 Gender: MALE Pet Type: POTBELLY_PIG
+
+****Testing getHousePetsMatchingGender() ****
+Here are the pets matching MALE 
+Pet Name: Rugby Toughy Age: 8 Gender: MALE Pet Type: DOG
+Pet Name: Sweety Tweety Age: 18 Gender: MALE Pet Type: BIRD
+Pet Name: Fred Flintstone Age: 7 Gender: MALE Pet Type: POTBELLY_PIG
+Pet Name: Gambling George Age: 2 Gender: MALE Pet Type: BIRD
+Pet Name: Fred Flintstone Age: 1 Gender: MALE Pet Type: LIZARD
+
+Here are the pets matching FEMALE 
+Pet Name: Miss Wonderful Age: 7 Gender: FEMALE Pet Type: POTBELLY_PIG
+Pet Name: Ms. Betty Rugger Age: 9 Gender: FEMALE Pet Type: BIRD
+Pet Name: Sport Age: 20 Gender: FEMALE Pet Type: DOG
+Pet Name: Queen Of Kings Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Tinker Belle Age: 4 Gender: FEMALE Pet Type: CAT
+Pet Name: Shirley Ann Marie Age: 6 Gender: FEMALE Pet Type: BIRD
+
+Here are the pets matching UNKNOWN 
+Pet Name: Kevin David Age: 2 Gender: UNKNOWN Pet Type: GERBIL
+
+Here are the pets matching DOG 
+
+Here are the pets matching CAT 
+
+Here are the pets matching CAT 
+Pet Name: Zoey The Cat Princess Age: 10 Gender: FEMALE Pet Type: CAT
+
+Here are the pets matching BIRD 
+Pet Name: Ms. Betty Rugger Age: 9 Gender: FEMALE Pet Type: BIRD
+Pet Name: Queen Of Kings Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Rosco Age: 0 Gender: MALE Pet Type: BIRD
+Pet Name: Shirley Ann Marie Age: 6 Gender: FEMALE Pet Type: BIRD
+
+****Testing getPetsWithMatchingName() ****
+Matching name: MISS WonDERFul
+
+Matching name: Fred flintsTone
+
+Matching name: Fred flintsTone
+Pet Name: Fred Flintstone Age: 5 Gender: MALE Pet Type: POTBELLY_PIG
+
+Matching name: sweety tWEETy  
+Pet Name: Sweety Tweety Age: 18 Gender: MALE Pet Type: BIRD
+
+Matching name: FRED   FlintSTOne  
+Pet Name: Fred Flintstone Age: 7 Gender: MALE Pet Type: POTBELLY_PIG
+Pet Name: Fred Flintstone Age: 1 Gender: MALE Pet Type: LIZARD
+
+Matching name: king of queens 
+Pet Name: King Of Queens Age: 6 Gender: MALE Pet Type: CAT
+
+Matching name: queen OF kINGS  
+Pet Name: Queen Of Kings Age: 6 Gender: FEMALE Pet Type: BIRD
+
+
+***** testing contains() and add() *****
+Size: 4 expected(4)  list1: 
+Pet Name: Fred Flintstone Age: 10 Gender: MALE Pet Type: GERBIL
+Pet Name: Ronda Rio Age: 8 Gender: FEMALE Pet Type: POTBELLY_PIG
+Pet Name: Grey Man Bleu Age: 20 Gender: MALE Pet Type: DOG
+Pet Name: Wilma Flintstone Age: 4 Gender: FEMALE Pet Type: CAT
+
+Size: 1 expected(1) list2: 
+Pet Name: Fred Flintstone Age: 5 Gender: MALE Pet Type: POTBELLY_PIG
+
+Size: 9 expected(9) list3: 
+Pet Name: Zoey The Cat Princess Age: 10 Gender: FEMALE Pet Type: CAT
+Pet Name: Rugby Toughy Age: 8 Gender: MALE Pet Type: DOG
+Pet Name: Sweety Tweety Age: 18 Gender: MALE Pet Type: BIRD
+Pet Name: Skippy Doo Age: 4 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Zippity Doo Age: 4 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Fred Flintstone Age: 7 Gender: MALE Pet Type: POTBELLY_PIG
+Pet Name: Gambling George Age: 2 Gender: MALE Pet Type: BIRD
+Pet Name: Fred Flintstone Age: 1 Gender: MALE Pet Type: LIZARD
+Pet Name: Fred Flintstone Age: 10 Gender: MALE Pet Type: GERBIL
+
+Size: 15 expected(15) list4: 
+Pet Name: Miss Wonderful Age: 7 Gender: FEMALE Pet Type: POTBELLY_PIG
+Pet Name: Kevin David Age: 2 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Mr. Ziggs Age: 0 Gender: MALE Pet Type: DOG
+Pet Name: Ms. Betty Rugger Age: 9 Gender: FEMALE Pet Type: BIRD
+Pet Name: Zane King Of Majesty Age: 6 Gender: MALE Pet Type: GERBIL
+Pet Name: Sport Age: 20 Gender: FEMALE Pet Type: DOG
+Pet Name: Canyon Grey Age: 11 Gender: MALE Pet Type: LIZARD
+Pet Name: King Of Queens Age: 6 Gender: MALE Pet Type: CAT
+Pet Name: Queen Of Kings Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Flapper Lee Age: 17 Gender: MALE Pet Type: DOG
+Pet Name: Tinker Belle Age: 4 Gender: FEMALE Pet Type: CAT
+Pet Name: Rosco Age: 0 Gender: MALE Pet Type: BIRD
+Pet Name: Cooper Gambit Age: 10 Gender: MALE Pet Type: LIZARD
+Pet Name: Shirley Ann Marie Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Rosco Age: 6 Gender: MALE Pet Type: POTBELLY_PIG
+
+
+***** testing add() and contains() completed *****
+
+***** testing find() get() and remove() and sort() and clear() *****
+Here is list1 sorted by age: 
+Pet Name: Grey Man Bleu Age: 20 Gender: MALE Pet Type: DOG
+Pet Name: Fred Flintstone Age: 10 Gender: MALE Pet Type: GERBIL
+Pet Name: Ronda Rio Age: 8 Gender: FEMALE Pet Type: POTBELLY_PIG
+Pet Name: Wilma Flintstone Age: 4 Gender: FEMALE Pet Type: CAT
+
+** found pet4 at index  0: Pet Name: Grey Man Bleu Age: 20 Gender: MALE Pet Type: DOG
+** found pet2 at index  1: Pet Name: Fred Flintstone Age: 10 Gender: MALE Pet Type: GERBIL
+** found pet3 at index  2: Pet Name: Ronda Rio Age: 8 Gender: FEMALE Pet Type: POTBELLY_PIG
+** found pet4 at index  3: Pet Name: Wilma Flintstone Age: 4 Gender: FEMALE Pet Type: CAT
+List of 15 sorted by pet age: 
+Pet Name: Sport Age: 20 Gender: FEMALE Pet Type: DOG
+Pet Name: Flapper Lee Age: 17 Gender: MALE Pet Type: DOG
+Pet Name: Canyon Grey Age: 11 Gender: MALE Pet Type: LIZARD
+Pet Name: Cooper Gambit Age: 10 Gender: MALE Pet Type: LIZARD
+Pet Name: Ms. Betty Rugger Age: 9 Gender: FEMALE Pet Type: BIRD
+Pet Name: Miss Wonderful Age: 7 Gender: FEMALE Pet Type: POTBELLY_PIG
+Pet Name: Zane King Of Majesty Age: 6 Gender: MALE Pet Type: GERBIL
+Pet Name: King Of Queens Age: 6 Gender: MALE Pet Type: CAT
+Pet Name: Queen Of Kings Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Shirley Ann Marie Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Rosco Age: 6 Gender: MALE Pet Type: POTBELLY_PIG
+Pet Name: Tinker Belle Age: 4 Gender: FEMALE Pet Type: CAT
+Pet Name: Kevin David Age: 2 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Mr. Ziggs Age: 0 Gender: MALE Pet Type: DOG
+Pet Name: Rosco Age: 0 Gender: MALE Pet Type: BIRD
+
+List of 15 sorted by pet name: 
+Pet Name: Canyon Grey Age: 11 Gender: MALE Pet Type: LIZARD
+Pet Name: Cooper Gambit Age: 10 Gender: MALE Pet Type: LIZARD
+Pet Name: Flapper Lee Age: 17 Gender: MALE Pet Type: DOG
+Pet Name: Kevin David Age: 2 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: King Of Queens Age: 6 Gender: MALE Pet Type: CAT
+Pet Name: Miss Wonderful Age: 7 Gender: FEMALE Pet Type: POTBELLY_PIG
+Pet Name: Mr. Ziggs Age: 0 Gender: MALE Pet Type: DOG
+Pet Name: Ms. Betty Rugger Age: 9 Gender: FEMALE Pet Type: BIRD
+Pet Name: Queen Of Kings Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Rosco Age: 6 Gender: MALE Pet Type: POTBELLY_PIG
+Pet Name: Rosco Age: 0 Gender: MALE Pet Type: BIRD
+Pet Name: Shirley Ann Marie Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Sport Age: 20 Gender: FEMALE Pet Type: DOG
+Pet Name: Tinker Belle Age: 4 Gender: FEMALE Pet Type: CAT
+Pet Name: Zane King Of Majesty Age: 6 Gender: MALE Pet Type: GERBIL
+
+
+------------------------------------------------------
+
+**** Now testing HousePetListUtilsImpl methods ****
+****Output of HousePetEmpty.txt:
+Contents of HousePetEmpty.txt after reading 
+
+****Output of housepet1.txt:
+SUCCESS opened file: HousePet1out.txt for reading...
+Contents of previously written file: HousePet1out.txt
+Pet Name: Fred Flintstone Age: 5 Gender: MALE Pet Type: POTBELLY_PIG
+
+**** Now testing several pets on a file - read and write ****
+SUCCESS opened for reading: housepet8.txt
+Output from reading filename: housepet8.txt
+Pet Name: Zoey The Cat Princess Age: 10 Gender: FEMALE Pet Type: CAT
+Pet Name: Rugby Toughy Age: 8 Gender: MALE Pet Type: DOG
+Pet Name: Sweety Tweety Age: 18 Gender: MALE Pet Type: BIRD
+Pet Name: Skippy Doo Age: 4 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Zippity Doo Age: 4 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Fred Flintstone Age: 7 Gender: MALE Pet Type: POTBELLY_PIG
+Pet Name: Gambling George Age: 2 Gender: MALE Pet Type: BIRD
+Pet Name: Fred Flintstone Age: 1 Gender: MALE Pet Type: LIZARD
+
+Contents of housepet8.txt after reading 
+Pet Name: Zoey The Cat Princess Age: 10 Gender: FEMALE Pet Type: CAT
+Pet Name: Rugby Toughy Age: 8 Gender: MALE Pet Type: DOG
+Pet Name: Sweety Tweety Age: 18 Gender: MALE Pet Type: BIRD
+Pet Name: Skippy Doo Age: 4 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Zippity Doo Age: 4 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Fred Flintstone Age: 7 Gender: MALE Pet Type: POTBELLY_PIG
+Pet Name: Gambling George Age: 2 Gender: MALE Pet Type: BIRD
+Pet Name: Fred Flintstone Age: 1 Gender: MALE Pet Type: LIZARD
+
+SUCCESS opened file: housepet8Out.txt for reading...
+Contents of previously written file housepet8Out.txt after reading 
+Pet Name: Zoey The Cat Princess Age: 10 Gender: FEMALE Pet Type: CAT
+Pet Name: Rugby Toughy Age: 8 Gender: MALE Pet Type: DOG
+Pet Name: Sweety Tweety Age: 18 Gender: MALE Pet Type: BIRD
+Pet Name: Skippy Doo Age: 4 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Zippity Doo Age: 4 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Fred Flintstone Age: 7 Gender: MALE Pet Type: POTBELLY_PIG
+Pet Name: Gambling George Age: 2 Gender: MALE Pet Type: BIRD
+Pet Name: Fred Flintstone Age: 1 Gender: MALE Pet Type: LIZARD
+
+SUCCESS opened for reading: housepetExtra.txt
+Contents of housepetExtra.txt after reading 
+Pet Name: Miss Wonderful Age: 7 Gender: FEMALE Pet Type: POTBELLY_PIG
+Pet Name: Kevin David Age: 2 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Mr. Ziggs Age: 0 Gender: MALE Pet Type: DOG
+Pet Name: Ms. Betty Rugger Age: 9 Gender: FEMALE Pet Type: BIRD
+Pet Name: Zane King Of Majesty Age: 6 Gender: MALE Pet Type: GERBIL
+Pet Name: Sport Age: 20 Gender: FEMALE Pet Type: DOG
+Pet Name: Canyon Grey Age: 11 Gender: MALE Pet Type: LIZARD
+Pet Name: King Of Queens Age: 6 Gender: MALE Pet Type: CAT
+Pet Name: Queen Of Kings Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Flapper Lee Age: 17 Gender: MALE Pet Type: DOG
+Pet Name: Tinker Belle Age: 4 Gender: FEMALE Pet Type: CAT
+Pet Name: Rosco Age: 0 Gender: MALE Pet Type: BIRD
+Pet Name: Cooper Gambit Age: 10 Gender: MALE Pet Type: LIZARD
+Pet Name: Shirley Ann Marie Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Rosco Age: 6 Gender: MALE Pet Type: POTBELLY_PIG
+
+SUCCESS opened file: HousePetExtraOut.txt for reading...
+Contents of previously written file HousePetExtraOut.txt after reading 
+Pet Name: Miss Wonderful Age: 7 Gender: FEMALE Pet Type: POTBELLY_PIG
+Pet Name: Kevin David Age: 2 Gender: UNKNOWN Pet Type: GERBIL
+Pet Name: Mr. Ziggs Age: 0 Gender: MALE Pet Type: DOG
+Pet Name: Ms. Betty Rugger Age: 9 Gender: FEMALE Pet Type: BIRD
+Pet Name: Zane King Of Majesty Age: 6 Gender: MALE Pet Type: GERBIL
+Pet Name: Sport Age: 20 Gender: FEMALE Pet Type: DOG
+Pet Name: Canyon Grey Age: 11 Gender: MALE Pet Type: LIZARD
+Pet Name: King Of Queens Age: 6 Gender: MALE Pet Type: CAT
+Pet Name: Queen Of Kings Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Flapper Lee Age: 17 Gender: MALE Pet Type: DOG
+Pet Name: Tinker Belle Age: 4 Gender: FEMALE Pet Type: CAT
+Pet Name: Rosco Age: 0 Gender: MALE Pet Type: BIRD
+Pet Name: Cooper Gambit Age: 10 Gender: MALE Pet Type: LIZARD
+Pet Name: Shirley Ann Marie Age: 6 Gender: FEMALE Pet Type: BIRD
+Pet Name: Rosco Age: 6 Gender: MALE Pet Type: POTBELLY_PIG
+
+**** End of testUtilsMethods() **** 
+
+End of Asg5 Testing for : Ruvi
+Execution ENDS  at: 2020-03-09 21:19:17
