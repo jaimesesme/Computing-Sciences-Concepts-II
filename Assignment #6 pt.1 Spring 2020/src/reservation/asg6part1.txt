@@ -1,0 +1,482 @@
+Ruvi Jaimes
+COSC 2425
+Assignment 6 part 1
+
+%%%%%%%%%% Reservation.java %%%%%%%%%% 
+package reservation;
+
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+
+import transactions.Transaction;
+
+public abstract class Reservation 
+
+{
+
+	public static final String DEFAULT_CONF_NUM = "AAAA";
+	private String confirmNum;
+	private GregorianCalendar startDate;
+	private GregorianCalendar endDate;
+	
+	// constructs a Reservation-derived instance with received confirmation number, sets dates to today's date
+	//  sets year, month and day with today's date.  Time is thus set to 0:00:00 for any equals test.
+	public Reservation(String confirmation)
+	{
+		this.setConfirmationNumber(confirmation);  
+		GregorianCalendar today = new GregorianCalendar();  // today's year, month, day
+		this.endDate = new GregorianCalendar(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
+		this.startDate = new GregorianCalendar(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
+
+	}
+	
+	// receives confirmation number, validates it is length 4 and only alphanumeric characters,
+	// if invalid number received uses DEFAULT_CONF_NUM
+	public void setConfirmationNumber(String confirmation) {
+
+		if(confirmation.length() != 4 || !utils.MyUtils.isValid(confirmation))
+			this.confirmNum = DEFAULT_CONF_NUM;
+		else 
+			this.confirmNum = confirmation.toUpperCase();
+	}
+	//receives date - a string of mm/dd/yy that is VALID date
+	// precondition - received date is a valid month day year combination in given format
+	// NOTE: if changing both start and end dates, ALWAYS change end date before changing start date
+	public void setStartDate(String date)
+	{
+		GregorianCalendar aDate=utils.MyUtils.stringToDate(date);
+		if(aDate.compareTo(this.getEndDate())<= 0)
+			this.startDate = aDate;
+		// no change if received date is after end date
+	}
+
+	//receives date - a string of mm/dd/yy that is VALID date
+	// precondition - received date is a valid month day year combination in given format
+	public void setEndDate(String date)
+	{
+		GregorianCalendar aDate=utils.MyUtils.stringToDate(date);
+		if(aDate.compareTo(this.getStartDate())>= 0)
+			this.endDate = aDate;
+		// no change if received date is before start date
+	}
+	//override of toString
+	// receives: nothing
+	// returns: a String with confirmation number, start and end dates on 1 line
+	public String toString()
+	{
+		String temp = "";
+		temp += "confirmation #: " + this.getConfirmationNumber() + " ";
+		temp += "starts: " + utils.MyUtils.dateToString(this.getStartDate()) + " ";
+		temp += "ends: " + utils.MyUtils.dateToString(this.getEndDate())+ " ";
+		return temp;
+	}
+
+	// receives :nothing
+	// returns this instance's ending date
+	public GregorianCalendar getEndDate() {
+
+		return  this.endDate;
+	}
+	// receives: nothing
+	// returns this instance's start date
+	public GregorianCalendar getStartDate() {
+
+		return this.startDate;
+	}// receives :nothing
+	// returns this instance's  end date converted to a String mm/dd/yyyy
+	public String getEndDateAsString() {
+
+		return  (utils.MyUtils.dateToString(this.endDate));
+	}
+	// receives: nothing
+	// returns this instance's start date converted to a String mm/dd/yyyy
+	public String getStartDateAsString() {
+
+		return (utils.MyUtils.dateToString(this.startDate));
+	}
+	// receives: nothing
+	// returns this instance's confirmation number
+	public String getConfirmationNumber() {
+		return this.confirmNum;
+	}
+	public boolean equals(Object obj)
+	{
+		if (this == obj)
+		{
+			return true;
+		}
+		if (! (obj instanceof Reservation))
+		{
+			return false;
+		}
+		if(!(this.getEndDateAsString().equals(((Reservation) obj).getEndDateAsString())))
+		{
+			return false;
+		}
+		if(!(this.getStartDateAsString().equals(((Reservation) obj).getStartDateAsString())))
+		{
+			return false;
+		}
+		if(!(this.getConfirmationNumber().equals(((Reservation) obj).getConfirmationNumber())))
+		{
+			return false;
+		}
+		return true;
+	}
+	
+	public int hashCode()
+	{
+		int mult = 31;
+		int result = 133;
+		result = result * mult + this.getEndDateAsString().hashCode();
+		result = result * mult + this.getStartDateAsString().hashCode(); 
+		result = result * mult + this.getConfirmationNumber().hashCode(); 
+		return result;		
+	}
+	
+}// end of Reservation abstract class
+
+%%%%%%%%%% HotelReservation.java %%%%%%%%%% 
+package reservation;
+
+public class HotelReservation extends Reservation
+{
+	public static final String DEFAULT_HOTEL_NAME = "$$$$";
+	public static final int DEFAULT_NUM_PERSONS = 1;
+	
+	private String hotelName;
+	private int numPersons;
+
+	
+	public HotelReservation (String confirmNumber)
+	{
+		super(confirmNumber);
+		this.hotelName = DEFAULT_HOTEL_NAME;
+		this.numPersons = DEFAULT_NUM_PERSONS;
+	}
+	
+	public String toString()
+	{
+		String retVal = "";
+		retVal += "HOTEL: " +super.toString()+"numberOfPersons:"+this.getNumPersons()+" hotelName: "+this.getHotelName();
+		return retVal;
+	}
+	public String getHotelName() 
+	{
+		return this.hotelName;
+	}
+	public int getNumPersons()
+	{
+		return this.numPersons;
+	}
+	public void setHotelName(String aHotelName) 
+	{
+		String value = utils.MyUtils.properFormat(aHotelName);
+		if (value.contentEquals(""))
+			this.hotelName = DEFAULT_HOTEL_NAME;
+		else
+			this.hotelName = value;
+	}
+	public void setNumPersons(int aNumPersons)
+	{
+		if (aNumPersons<1 || aNumPersons>100)
+			this.numPersons = DEFAULT_NUM_PERSONS;
+		else 
+			this.numPersons = aNumPersons;
+	}
+
+}
+
+%%%%%%%%%% CarReservation.java %%%%%%%%%% 
+(requires these classes RentalCar from lab4 and RentalCarUtilsImpl for reading/writing a single RentalCar)
+package reservation;
+import reservation.RentalCar;
+
+public class CarReservation extends Reservation
+{
+
+	private RentalCar car; 
+	
+	public CarReservation(String confirmNumber)
+	{
+		super(confirmNumber);
+		this.car = new RentalCar();
+		
+	}
+	
+	public String toString()
+	{
+		String retVal = "";
+		retVal += "CAR: "+super.toString()+"Car: "+this.getCar();
+		return retVal;
+	}
+	
+	public RentalCar getCar()
+	{
+		return this.car;
+	}
+	
+	public void setCar(RentalCar aCar)
+	{
+		this.car = aCar;
+	}
+	
+}
+
+
+%%%%%%%%%% FlightReservation.java %%%%%%%%%% 
+
+package reservation;
+
+public class FlightReservation extends Reservation
+{
+
+	public static final String DEFAULT_CODE = "AUS";
+	
+	private String arrivalCode;
+	private String departCode;
+	
+	public FlightReservation(String confirmNumber)
+	{
+		super(confirmNumber);
+		this.arrivalCode = DEFAULT_CODE;
+		this.departCode = DEFAULT_CODE;
+	}
+	
+	public String toString()
+	{
+		String retVal = "";
+		retVal+= "FLIGHT: "+super.toString()+this.getArrivalCode()+this.getDepartCode();
+		return retVal;
+	}
+	public String getArrivalCode()
+	{
+		return this.arrivalCode;
+	}
+	
+	public String getDepartCode()
+	{
+		return this.departCode;
+	}
+	
+	public void setArrivalCode(String aCode) 
+	{
+		aCode = utils.MyUtils.properFormat(aCode);
+		aCode = aCode.toUpperCase();
+		if (!(aCode.length()==3))
+			this.arrivalCode = DEFAULT_CODE;
+		else
+			this.arrivalCode = aCode;
+	}
+	public void setDepartCode(String aCode)//uses default code if invalid code received for either setter)
+	{
+		aCode = utils.MyUtils.properFormat(aCode);
+		aCode = aCode.toUpperCase();
+		if (!(aCode.length()==3))
+			this.departCode = DEFAULT_CODE;
+		else
+			this.departCode = aCode;
+	}
+}
+
+%%%%%%%%%% ReservationUtilsImpl.java %%%%%%%%%% 
+package reservation;
+import reservation.RentalCar;
+import reservation.CarMake;
+import java.io.PrintWriter;
+import java.util.GregorianCalendar;
+import java.util.Scanner;
+
+public class ReservationUtilsImpl 
+{
+	
+	//receives: inFile, a Scanner instance already open and ready for reading 
+	//  tries to read one Reservation derived instance from file, 
+	//if successful, creates Reservation-derived instance, populates it, returns it, assumes data in order expected
+	//returns null if no data on inFile to read, returns populated Reservation-derived instance otherwise
+	public static Reservation readFromScanner(Scanner inFile)
+	{
+		String reservationType = "";
+		String confirmationId = "";
+		String startDate = "";
+		String endDate = "";
+		
+		String hotelName = "";
+		int numPersons = 0;
+		
+		String vin = "";
+		int year = 0;
+		String make = "";
+		
+		String departCode = "";
+		String arrivalCode = "";
+		
+		if(inFile.hasNext())
+			reservationType = inFile.next();
+		else
+			return null;
+		if (inFile.hasNext())
+			confirmationId = inFile.next();
+		else
+			return null;
+		if (inFile.hasNext())
+			startDate = inFile.next();
+		else
+			return null;
+		if (inFile.hasNext())
+			endDate = inFile.nextLine();
+		else
+			return null;
+		GregorianCalendar sDate = utils.MyUtils.stringToDate(startDate);
+		GregorianCalendar eDate = utils.MyUtils.stringToDate(endDate);
+		if (reservationType.toUpperCase().equals("HOTEL"))
+		{
+			if(inFile.hasNextInt())
+				numPersons = inFile.nextInt();
+			else
+				return null;
+			if (inFile.hasNext())
+				hotelName = inFile.nextLine();
+			else
+				return null;
+			HotelReservation hr = new HotelReservation(confirmationId);
+			return hr;
+			
+	
+		}
+		
+		if (reservationType.toUpperCase().equals("CAR"))
+		{
+			RentalCar car = reservation.RentalCarUtilsImpl.readFromScanner(inFile);
+			
+			CarReservation cr = new CarReservation(confirmationId);
+			return cr;
+		} 
+		
+		if (reservationType.toUpperCase().equals("FLIGHT"))
+		{
+			if(inFile.hasNext())
+				departCode = inFile.next();
+			else
+				return null;
+			if (inFile.hasNext())
+				arrivalCode = inFile.nextLine();
+			else
+				return null;
+			
+			FlightReservation fr = new FlightReservation(confirmationId);
+			return fr;
+		} 
+		else
+			return null;
+			
+	}
+
+	//receives: reservation to write, outFile, already open and ready to be written to 
+	//writes received reservation instance to file in same format as read in with 
+	//including leading HOTEL or CAR or FLIGHT on first line of output
+	//returns: nothing
+	public static void writeToFile(PrintWriter outFile, Reservation reservation)
+	{
+		if (reservation instanceof CarReservation)
+		{
+			CarReservation cr = (CarReservation)reservation;
+			outFile.println("CAR " + cr.getConfirmationNumber() + " "+cr.getStartDate()+" "+cr.getEndDate());
+			outFile.println(cr.getCar().getVin()+" "+cr.getCar().getYear()+" "+cr.getCar().getMake());
+		}
+		
+		else if (reservation instanceof FlightReservation)
+		{
+			FlightReservation fr = (FlightReservation)reservation;
+			outFile.println("FLIGHT "+fr.getConfirmationNumber() + " "+fr.getStartDate()+" "+fr.getEndDate());
+			outFile.println(fr.getArrivalCode()+" "+fr.getDepartCode());
+		}
+		
+		else if (reservation instanceof HotelReservation)
+		{
+			HotelReservation hr = (HotelReservation)reservation;
+			outFile.println("HOTEL "+hr.getConfirmationNumber() + " "+hr.getStartDate()+" "+hr.getEndDate());
+			outFile.println(hr.getNumPersons()+" "+hr.getHotelName());
+		}
+	}
+	
+	
+	
+
+}
+
+%%%%%%%%%% Console output of Asg6Test1Part1.java %%%%%%%%%% 
+
+Spring 2020 Assignment #6 Test PART 1
+Enter your name: ruvi
+Execution Starting time:   at: 2020-04-06 22:42:16
+
+----------------********BEGIN TESTING Part 1 FOR Ruvi ***********
+Execution 
+----------------Ruvi -- BEGINS reservationTestHotel()  at: 2020-04-06 22:42:16
+Today is: 4/6/2020
+hotel1: HOTEL: confirmation #: 1111 starts: 5/15/2020 ends: 5/21/2020 numberOfPersons:1 hotelName: Hyatt Hill Country Resort
+hotel2: HOTEL: confirmation #: AAAA starts: 4/6/2020 ends: 4/6/2020 numberOfPersons:1 hotelName: $$$$
+Execution Ruvi -- ENDS reservationTestHotel()  at: 2020-04-06 22:42:16
+Execution 
+----------------Ruvi -- BEGINS reservationTestCar()  at: 2020-04-06 22:42:16
+Car Reservation: CAR: confirmation #: XXYY starts: 10/15/2020 ends: 10/15/2020 Car: Year: 2018 VIN: 8899 Make: NISSAN
+Execution Ruvi -- ENDS reservationTestCar()  at: 2020-04-06 22:42:16
+Execution 
+----------------Ruvi -- BEGINS reservationTestFlight()  at: 2020-04-06 22:42:16
+Flight reservation: FLIGHT: confirmation #: F222 starts: 8/1/2020 ends: 8/10/2020 AUSATL
+Execution Ruvi -- ENDS reservationTestFlight()  at: 2020-04-06 22:42:16
+Execution 
+---------------- Ruvi -- BEGINS reservationTestEqualsAndHashCode()  at: 2020-04-06 22:42:16
+Hash codes: 2072255303 == 2072255303
+Hash codes: 2072255303 == 2072255303
+Hash codes: 2072345605 == 2072345605
+Hash codes: 1932795196 not equal to 2072345605
+Hash codes: 1932795196 not equal to -1237776707
+Hash codes: 1932795196 not equal to 2072345637
+Execution 
+-----------------Ruvi -- BEGINS reservationTestFileIO()  at: 2020-04-06 22:42:16
+********Now testing methods in ReservationUtilsImpl
+SUCCESS opened file: reservation6.txt for input
+Just read: HOTEL: confirmation #: H111 starts: 4/6/2020 ends: 4/6/2020 numberOfPersons:1 hotelName: $$$$
+Just read: CAR: confirmation #: C445 starts: 4/6/2020 ends: 4/6/2020 Car: Year: 2020 VIN: 0000 Make: TOYOTA
+Just read: FLIGHT: confirmation #: F111 starts: 4/6/2020 ends: 4/6/2020 AUSAUS
+Just read: HOTEL: confirmation #: H334 starts: 4/6/2020 ends: 4/6/2020 numberOfPersons:1 hotelName: $$$$
+Just read: CAR: confirmation #: AAAA starts: 4/6/2020 ends: 4/6/2020 Car: Year: 2020 VIN: 0000 Make: TOYOTA
+Just read: FLIGHT: confirmation #: F888 starts: 4/6/2020 ends: 4/6/2020 AUSAUS
+SUCCESS read 6 reservations from reservation6.txt
+Ruvi ********Now Testing writeToFile...
+SUCCESS opened file: reservation6.txt for input
+Just read: HOTEL: confirmation #: H111 starts: 4/6/2020 ends: 4/6/2020 numberOfPersons:1 hotelName: $$$$
+Just read: CAR: confirmation #: C445 starts: 4/6/2020 ends: 4/6/2020 Car: Year: 2020 VIN: 0000 Make: TOYOTA
+Just read: FLIGHT: confirmation #: F111 starts: 4/6/2020 ends: 4/6/2020 AUSAUS
+Just read: HOTEL: confirmation #: H334 starts: 4/6/2020 ends: 4/6/2020 numberOfPersons:1 hotelName: $$$$
+Just read: CAR: confirmation #: AAAA starts: 4/6/2020 ends: 4/6/2020 Car: Year: 2020 VIN: 0000 Make: TOYOTA
+Just read: FLIGHT: confirmation #: F888 starts: 4/6/2020 ends: 4/6/2020 AUSAUS
+SUCCESS read 6 reservations from reservation6Out.txt
+SUCCESS opened file: reservation6Out.txt for input
+error extracting date from: java.util.GregorianCalendar[time=1586149200000,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=3,WEEK_OF_YEAR=15,WEEK_OF_MONTH=2,DAY_OF_MONTH=6,DAY_OF_YEAR=97,DAY_OF_WEEK=2,DAY_OF_WEEK_IN_MONTH=1,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=0,ZONE_OFFSET=-21600000,DST_OFFSET=3600000] using default date 1/1/2000
+error extracting date from:  java.util.GregorianCalendar[time=1586149200000,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=3,WEEK_OF_YEAR=15,WEEK_OF_MONTH=2,DAY_OF_MONTH=6,DAY_OF_YEAR=97,DAY_OF_WEEK=2,DAY_OF_WEEK_IN_MONTH=1,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=0,ZONE_OFFSET=-21600000,DST_OFFSET=3600000] using default date 1/1/2000
+Just read: HOTEL: confirmation #: H111 starts: 4/6/2020 ends: 4/6/2020 numberOfPersons:1 hotelName: $$$$
+error extracting date from: java.util.GregorianCalendar[time=1586149200000,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=3,WEEK_OF_YEAR=15,WEEK_OF_MONTH=2,DAY_OF_MONTH=6,DAY_OF_YEAR=97,DAY_OF_WEEK=2,DAY_OF_WEEK_IN_MONTH=1,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=0,ZONE_OFFSET=-21600000,DST_OFFSET=3600000] using default date 1/1/2000
+error extracting date from:  java.util.GregorianCalendar[time=1586149200000,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=3,WEEK_OF_YEAR=15,WEEK_OF_MONTH=2,DAY_OF_MONTH=6,DAY_OF_YEAR=97,DAY_OF_WEEK=2,DAY_OF_WEEK_IN_MONTH=1,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=0,ZONE_OFFSET=-21600000,DST_OFFSET=3600000] using default date 1/1/2000
+Just read: CAR: confirmation #: C445 starts: 4/6/2020 ends: 4/6/2020 Car: Year: 2020 VIN: 0000 Make: TOYOTA
+error extracting date from: java.util.GregorianCalendar[time=1586149200000,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=3,WEEK_OF_YEAR=15,WEEK_OF_MONTH=2,DAY_OF_MONTH=6,DAY_OF_YEAR=97,DAY_OF_WEEK=2,DAY_OF_WEEK_IN_MONTH=1,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=0,ZONE_OFFSET=-21600000,DST_OFFSET=3600000] using default date 1/1/2000
+error extracting date from:  java.util.GregorianCalendar[time=1586149200000,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=3,WEEK_OF_YEAR=15,WEEK_OF_MONTH=2,DAY_OF_MONTH=6,DAY_OF_YEAR=97,DAY_OF_WEEK=2,DAY_OF_WEEK_IN_MONTH=1,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=0,ZONE_OFFSET=-21600000,DST_OFFSET=3600000] using default date 1/1/2000
+Just read: FLIGHT: confirmation #: F111 starts: 4/6/2020 ends: 4/6/2020 AUSAUS
+error extracting date from: java.util.GregorianCalendar[time=1586149200000,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=3,WEEK_OF_YEAR=15,WEEK_OF_MONTH=2,DAY_OF_MONTH=6,DAY_OF_YEAR=97,DAY_OF_WEEK=2,DAY_OF_WEEK_IN_MONTH=1,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=0,ZONE_OFFSET=-21600000,DST_OFFSET=3600000] using default date 1/1/2000
+error extracting date from:  java.util.GregorianCalendar[time=1586149200000,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=3,WEEK_OF_YEAR=15,WEEK_OF_MONTH=2,DAY_OF_MONTH=6,DAY_OF_YEAR=97,DAY_OF_WEEK=2,DAY_OF_WEEK_IN_MONTH=1,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=0,ZONE_OFFSET=-21600000,DST_OFFSET=3600000] using default date 1/1/2000
+Just read: HOTEL: confirmation #: H334 starts: 4/6/2020 ends: 4/6/2020 numberOfPersons:1 hotelName: $$$$
+error extracting date from: java.util.GregorianCalendar[time=1586149200000,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=3,WEEK_OF_YEAR=15,WEEK_OF_MONTH=2,DAY_OF_MONTH=6,DAY_OF_YEAR=97,DAY_OF_WEEK=2,DAY_OF_WEEK_IN_MONTH=1,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=0,ZONE_OFFSET=-21600000,DST_OFFSET=3600000] using default date 1/1/2000
+error extracting date from:  java.util.GregorianCalendar[time=1586149200000,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=3,WEEK_OF_YEAR=15,WEEK_OF_MONTH=2,DAY_OF_MONTH=6,DAY_OF_YEAR=97,DAY_OF_WEEK=2,DAY_OF_WEEK_IN_MONTH=1,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=0,ZONE_OFFSET=-21600000,DST_OFFSET=3600000] using default date 1/1/2000
+Just read: CAR: confirmation #: AAAA starts: 4/6/2020 ends: 4/6/2020 Car: Year: 2020 VIN: 0000 Make: TOYOTA
+error extracting date from: java.util.GregorianCalendar[time=1586149200000,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=3,WEEK_OF_YEAR=15,WEEK_OF_MONTH=2,DAY_OF_MONTH=6,DAY_OF_YEAR=97,DAY_OF_WEEK=2,DAY_OF_WEEK_IN_MONTH=1,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=0,ZONE_OFFSET=-21600000,DST_OFFSET=3600000] using default date 1/1/2000
+error extracting date from:  java.util.GregorianCalendar[time=1586149200000,areFieldsSet=true,areAllFieldsSet=true,lenient=true,zone=sun.util.calendar.ZoneInfo[id="America/Chicago",offset=-21600000,dstSavings=3600000,useDaylight=true,transitions=235,lastRule=java.util.SimpleTimeZone[id=America/Chicago,offset=-21600000,dstSavings=3600000,useDaylight=true,startYear=0,startMode=3,startMonth=2,startDay=8,startDayOfWeek=1,startTime=7200000,startTimeMode=0,endMode=3,endMonth=10,endDay=1,endDayOfWeek=1,endTime=7200000,endTimeMode=0]],firstDayOfWeek=1,minimalDaysInFirstWeek=1,ERA=1,YEAR=2020,MONTH=3,WEEK_OF_YEAR=15,WEEK_OF_MONTH=2,DAY_OF_MONTH=6,DAY_OF_YEAR=97,DAY_OF_WEEK=2,DAY_OF_WEEK_IN_MONTH=1,AM_PM=0,HOUR=0,HOUR_OF_DAY=0,MINUTE=0,SECOND=0,MILLISECOND=0,ZONE_OFFSET=-21600000,DST_OFFSET=3600000] using default date 1/1/2000
+Just read: FLIGHT: confirmation #: F888 starts: 4/6/2020 ends: 4/6/2020 AUSAUS
+SUCCESS read 6 reservations from reservation6Out.txt
+SUCCESS opened file: reservation1.txt for input
+Just read: FLIGHT: confirmation #: F111 starts: 4/6/2020 ends: 4/6/2020 AUSAUS
+SUCCESS read 1 reservations from reservation1Out.txt
+Execution Ending time:   at: 2020-04-06 22:42:16
+
+----------------********END OF TESTING  Part 1 FOR Ruvi ***********
