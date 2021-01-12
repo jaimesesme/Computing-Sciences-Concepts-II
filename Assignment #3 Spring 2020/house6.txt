@@ -1,0 +1,26 @@
+ 400 WEST AVE. 
+ 2010
+ Vacation
+ 3  2.5
+ 85 N. Main StREET
+ 2020
+ REntal
+ 4  2.0
+ 6100 Elm Pass
+ 1900
+ PriVAte
+ 2  1.0
+ 7900 east 23rd 
+ 1990
+ rentAL
+ 3  2.0
+ 100 Bain South
+ 2005
+ vacatioN
+ 4 3.5
+ 38 Canyon rd.
+ 2014
+ PriVATE
+ 5 3.5
+ 
+ 
